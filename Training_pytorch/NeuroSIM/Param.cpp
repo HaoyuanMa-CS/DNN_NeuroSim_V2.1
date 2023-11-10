@@ -152,20 +152,20 @@ Param::Param() {
 	
 	/*** parameters for analog synaptic devices ***/
 	heightInFeatureSize1T1R = 4;        // 1T1R Cell height in feature size
-	widthInFeatureSize1T1R = 4;       // 1T1R Cell width in feature size
+	widthInFeatureSize1T1R = 9;       // 1T1R Cell width in feature size
 	heightInFeatureSizeCrossbar = 2;    // Crossbar Cell height in feature size
 	widthInFeatureSizeCrossbar = 2;     // Crossbar Cell width in feature size
 	
-	resistanceOn = 240e3;               // Ron resistance at Vr in the reported measurement data (need to recalculate below if considering the nonlinearity)
-	resistanceOff = 240e3*100;           // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
+	resistanceOn = 20e3;               // Ron resistance at Vr in the reported measurement data (need to recalculate below if considering the nonlinearity)
+	resistanceOff = 20e3*100;           // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
 	maxConductance = (double) 1/resistanceOn;
 	minConductance = (double) 1/resistanceOff;
 	gateCapFeFET = 2.1717e-18;	        // Gate capacitance of FeFET (F)
 	polarization = 20;                  // polarization of FeFET (uC/cm^2)
-	maxNumLevelLTP = 60;	            // Maximum number of conductance states during LTP or weight increase
-	maxNumLevelLTD = 60;	            // Maximum number of conductance states during LTD or weight decrease
-	writeVoltage = 4;
-	writePulseWidth = 50e-9;
+	maxNumLevelLTP = 128;	            // Maximum number of conductance states during LTP or weight increase
+	maxNumLevelLTD = 128;	            // Maximum number of conductance states during LTD or weight decrease
+	writeVoltage = 1.5;
+	writePulseWidth = 60e-9;
 	nonlinearIV = false; 				// This option is to consider I-V nonlinearity in cross-point array or not
 	nonlinearity = 10; 					// This is the nonlinearity for the current ratio at Vw and Vw/2
 	
@@ -197,8 +197,12 @@ Param::Param() {
 	numRowMuxedAG = 8;                  // How many columns share 1 ADC (for Transpose array) in transpose subarray (gradient calculation of activation)
 	levelOutputAG = 64;                 // # of levels of the multilevelSenseAmp output, in transpose subarray (gradient calculation of activation)
 	numRowMuxedWG = 8;                  // How many columns share 1 ADC (for Transpose array) in gradient calculation of weight
-	levelOutputWG = 16;                 // # of levels of the multilevelSenseAmp output, in gradient calculation of weight
+	levelOutputWG = 64;                 // # of levels of the multilevelSenseAmp output, in gradient calculation of weight
 
+	activityRowReadWG = 0.5;
+	activityRowWriteWG = 0.5;
+	activityColWriteWG = 0.5;
+	
 	dramType = 2;                       // 1: GDDR5
 										// 2: HBM2
 	

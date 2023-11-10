@@ -73,5 +73,3 @@ def cifar10( args, logger, pretrained=None):
     if pretrained is not None:
         model.load_state_dict(torch.load(pretrained))
     return model
-
-

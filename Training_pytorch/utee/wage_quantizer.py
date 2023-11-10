@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Function
 import numpy as np
 import math as m
+from scipy.special import lambertw
 
 def shift(x):
     #TODO: edge case, when x contains 0
@@ -248,6 +249,44 @@ def GetParamA(NL):
 
 def GetParamB(A, maxLevel):
     return 2 / (1 - torch.exp(-maxLevel/A))
+
+def QG_NLS(origin, bits_W, x, bits_G, lr, NLS_LTP_C1, NLS_LTP_C2, NLS_LTD_C1, NLS_LTD_C2, maxLevelLTP, maxLevelLTD):
+    max_entry = x.abs().max()
+    assert max_entry != 0, "QG blow"
+    #if max_entry != 0:
+    x /= shift(max_entry)
+    gradient = lr * x
+    # introduce non-linearity here
+    numLevel = max(maxLevelLTP, maxLevelLTD)
+    # apply delta pulse to old weight
+    deltaPulse = torch.round((gradient) / 2 * numLevel)
+    NLS_C1 = torch.where(torch.sign(deltaPulse)<0, NLS_LTP_C1, NLS_LTD_C1).float()
+    NLS_C2 = torch.where(torch.sign(deltaPulse)<0, NLS_LTP_C2, NLS_LTD_C2).float()
+    NLS_xmin = (-1 / NLS_C2) * numLevel
+    xPulse = InvNLS(origin, NLS_C1, NLS_C2) * numLevel
+    newPulse = torch.where((xPulse - deltaPulse)<NLS_xmin, NLS_xmin, xPulse - deltaPulse)
+    weightNew = NLS(newPulse / numLevel, NLS_C1, NLS_C2)
+    gradient = origin - C(weightNew, bits_W)
+    norm = SR(gradient)  # normalize the gradient
+    gradient = norm / S(bits_G)
+    return gradient
+
+def NLS(xPulse, NLS_C1, NLS_C2):
+    return (1 - torch.exp(-NLS_C1 * xPulse / torch.exp(-NLS_C2 * xPulse)))  # (1-exp(-c1*x/exp(-c2*x)))
+    
+def InvNLS(weights, NLS_C1, NLS_C2):
+    return torch.where(weights<1, 
+                       lambertw((-NLS_C2*torch.log(1.0-weights)/NLS_C1).cpu()).real.cuda().float()/NLS_C2, 
+                       torch.ones_like(weights))
+    # initial_guess = torch.tensor(initial_guess)
+    # xPulse = []
+    # weights = weights.cpu()
+    # NLS_C1 = NLS_C1.cpu()
+    # NLS_C2 = NLS_C2.cpu()
+    # length = len(weights.flatten())
+    # for i in range(length):
+    #     xPulse.append(fsolve(NLS, initial_guess, args=(NLS_C1.flatten()[i], NLS_C2.flatten()[i], weights.flatten()[i])))
+    # return torch.tensor(np.array(xPulse).reshape(weights.shape))
 
 def Retention(x, t, v, detect, target):
     lower = torch.min(x).item()

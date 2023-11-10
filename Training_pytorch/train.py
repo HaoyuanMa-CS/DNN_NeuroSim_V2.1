@@ -105,7 +105,7 @@ if args.cuda:
 # data loader and model
 assert args.type in ['cifar10', 'cifar100'], args.type
 train_loader, test_loader = dataset.get10(batch_size=args.batch_size, num_workers=1)
-model = model.cifar10(args = args, logger=logger)
+model = model.cifar10(args = args, logger=logger, pretrained=r"Training_pytorch\latest.pth")
 if args.cuda:
     model.cuda()
 
